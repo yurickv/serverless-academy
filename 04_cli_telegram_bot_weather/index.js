@@ -1,14 +1,8 @@
 const TelegramBot = require("node-telegram-bot-api");
 // const commander = require("commander");
-const { token, getForecastWeather, botMessage } = require("./helpers");
+const { token, isMessageWeather } = require("./helpers");
 
 const bot = new TelegramBot(token, { polling: true });
-
-// commander.parse(process.argv);
-// const data = async () => {
-//   return await getForecastWeather();
-// };
-// data();
 
 console.log("hello");
 
@@ -19,20 +13,10 @@ bot.onText(/\/command1/, async (msg) => {
   userIntervals[chatId] = 3;
   bot.sendMessage(chatId, "You will receive weather updates every 3 hours.");
 
-  const { list } = await getForecastWeather();
-  const { dt_txt, main, weather, clouds, wind, humidity, rain } = list[0];
-  bot.sendMessage(
-    chatId,
-    botMessage(dt_txt, main, weather, clouds, wind, humidity, rain)
-  );
+  await isMessageWeather(chatId, bot);
 
   userIntervals[chatId + "_interval"] = setInterval(async () => {
-    const { list } = await getForecastWeather();
-    const { dt_txt, main, weather, clouds, wind, humidity, rain } = list[0];
-    bot.sendMessage(
-      chatId,
-      botMessage(dt_txt, main, weather, clouds, wind, humidity, rain)
-    );
+    await isMessageWeather(chatId, bot);
   }, 1000 * 10800);
 });
 
@@ -41,24 +25,14 @@ bot.onText(/\/command2/, async (msg) => {
   userIntervals[chatId] = 6;
   bot.sendMessage(chatId, "You will receive weather updates every 6 hours.");
 
-  const { list } = await getForecastWeather();
-  const { dt_txt, main, weather, clouds, wind, humidity, rain } = list[0];
-  bot.sendMessage(
-    chatId,
-    botMessage(dt_txt, main, weather, clouds, wind, humidity, rain)
-  );
+  await isMessageWeather(chatId, bot);
 
   userIntervals[chatId + "_interval"] = setInterval(async () => {
-    const { list } = await getForecastWeather();
-    const { dt_txt, main, weather, clouds, wind, humidity, rain } = list[0];
-    bot.sendMessage(
-      chatId,
-      botMessage(dt_txt, main, weather, clouds, wind, humidity, rain)
-    );
+    await isMessageWeather(chatId, bot);
   }, 1000 * 21600);
 });
 
-// Stop the interval and clear the user's choice
+// Stop interval and clear user's choice
 bot.onText(/\/command3/, (msg) => {
   const chatId = msg.chat.id;
   if (userIntervals[chatId + "_interval"]) {
