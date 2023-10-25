@@ -12,9 +12,7 @@ const botMessage = (
   main,
   weather,
   clouds,
-  wind,
-  humidity,
-  rain
+  wind
 ) => `🌦 Weather Forecast 🌦
 Date & Time: ${formattedDate(dt_txt)}
 Temperature: ${main.temp}°C
@@ -22,7 +20,5 @@ Feels Like: ${main.feels_like}°C
 Weather: ${weather[0].description}
 Cloud Coverage: ${clouds.all}%
 Wind Speed: ${wind.speed} m/s
-Humidity: ${humidity}%
-Rainfall (3h): ${rain["3h"]} mm
 `;
 module.exports = { botMessage };

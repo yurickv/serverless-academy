@@ -3,10 +3,10 @@ const { botMessage } = require("./botMessage");
 
 const isMessageWeather = async (chatId, bot) => {
   const { list } = await getForecastWeather();
-  const { dt_txt, main, weather, clouds, wind, humidity, rain } = list[0];
+  const { dt_txt, main, weather, clouds, wind } = list[0];
   return bot.sendMessage(
     chatId,
-    botMessage(dt_txt, main, weather, clouds, wind, humidity, rain)
+    botMessage(dt_txt, main, weather, clouds, wind)
   );
 };
 

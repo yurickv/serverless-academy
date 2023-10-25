@@ -7,6 +7,7 @@ axios.defaults.baseURL = `http://api.openweathermap.org/data/2.5/forecast?APPID=
 const getForecastWeather = async () => {
   try {
     const response = await axios.get();
+    // console.log(response.data);
     return response.data;
   } catch (error) {
     console.error("Помилка при отриманні даних:", error.message);
