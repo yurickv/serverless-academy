@@ -8,7 +8,7 @@ console.log("hello");
 
 const userIntervals = {};
 
-bot.onText(/\/command1/, async (msg) => {
+bot.onText(/\/command2/, async (msg) => {
   const chatId = msg.chat.id;
   userIntervals[chatId] = 3;
   bot.sendMessage(chatId, "You will receive weather updates every 3 hours.");
@@ -20,7 +20,7 @@ bot.onText(/\/command1/, async (msg) => {
   }, 1000 * 10800);
 });
 
-bot.onText(/\/command2/, async (msg) => {
+bot.onText(/\/command3/, async (msg) => {
   const chatId = msg.chat.id;
   userIntervals[chatId] = 6;
   bot.sendMessage(chatId, "You will receive weather updates every 6 hours.");
@@ -33,7 +33,7 @@ bot.onText(/\/command2/, async (msg) => {
 });
 
 // Stop interval and clear user's choice
-bot.onText(/\/command3/, (msg) => {
+bot.onText(/\/command4/, (msg) => {
   const chatId = msg.chat.id;
   if (userIntervals[chatId + "_interval"]) {
     clearInterval(userIntervals[chatId + "_interval"]);
