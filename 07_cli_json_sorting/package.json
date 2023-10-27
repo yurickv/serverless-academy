@@ -1,0 +1,13 @@
+{
+  "name": "07_cli_json_sorting",
+  "version": "1.0.0",
+  "description": "Для старту програми введіть в консолі npm start",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
