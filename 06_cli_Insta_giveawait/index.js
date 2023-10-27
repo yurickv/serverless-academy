@@ -1,42 +1,74 @@
 const fs = require("fs").promises;
-
 const path = require("path");
+
 const folderPath = path.join(__dirname, "db");
 
-let files = [];
-const readingDataBase = async () => {
-  try {
-    files = await fs.readdir(folderPath);
-    // console.log(files);
-  } catch (error) {
-    console.error("Error:", error);
-  }
-};
-readingDataBase();
+async function countUniqueValues() {
+  const files = await fs.readdir(folderPath);
+  const uniqueUsers = new Set();
 
-// console.log(folderPath);
+  for (const file of files) {
+    const filePath = path.join(folderPath, file);
+    const data = await fs.readFile(filePath, "utf8");
+    const lines = data.trim().split("\n");
 
-const uniqueValues = async () => {
-  try {
-    let uniqueNames = [];
-
-    for (const file of files) {
-      console.log(file);
-      const filePath = path.join(folderPath, file);
-      const data = await fs.readFile(filePath, "utf8");
-      const lines = data.trim().split("\n");
-
-      lines.forEach((line) => {
-        if (!uniqueNames.includes(line)) {
-          uniqueNames.push(line);
-        }
-      });
+    for (const line of lines) {
+      uniqueUsers.add(line);
     }
-
-    const uniqueNameCount = uniqueNames.length;
-    console.log("Total unique names:", uniqueNameCount);
-  } catch (error) {
-    console.error("Error:", error);
   }
+  console.log("Загальна кількість унікальних імен:", uniqueUsers.size);
+  // return uniqueUsers.size;
+}
+
+async function countUsersInAtLeastNFiles(numberFiles) {
+  const files = await fs.readdir(folderPath);
+  const userCounts = new Map();
+
+  for (const file of files) {
+    const filePath = path.join(folderPath, file);
+    const data = await fs.readFile(filePath, "utf8");
+    const lines = data.trim().split("\n");
+
+    for (const line of lines) {
+      const userName = line;
+
+      if (userCounts.has(userName)) {
+        userCounts.set(userName, userCounts.get(userName) + 1);
+      } else {
+        userCounts.set(userName, 1);
+      }
+    }
+  }
+
+  let usersInAtLeastNFiles = 0;
+  for (const [userName, count] of userCounts.entries()) {
+    if (count >= numberFiles) {
+      usersInAtLeastNFiles += 1;
+    }
+  }
+  console.log(
+    `Загальна кількість імен, що зустрічаються щонайменше в ${numberFiles} файлах:`,
+    usersInAtLeastNFiles
+  );
+  // return usersInAtLeast10Files;
+}
+
+const main = async () => {
+  console.time("countUniqueValues");
+  await countUniqueValues();
+  console.timeEnd("countUniqueValues");
+
+  console.time("countUsersInAtLeastNFiles");
+  await countUsersInAtLeastNFiles(1);
+  console.timeEnd("countUsersInAtLeastNFiles");
+
+  console.time("countUsersInAtLeastNFiles");
+  await countUsersInAtLeastNFiles(10);
+  console.timeEnd("countUsersInAtLeastNFiles");
+
+  console.time("countUsersInAtLeastNFiles");
+  await countUsersInAtLeastNFiles(20);
+  console.timeEnd("countUsersInAtLeastNFiles");
 };
-uniqueValues();
+
+main();
