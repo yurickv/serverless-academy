@@ -14,3 +14,5 @@ client.connect(function (err) {
   app.listen(5432);
   console.log("Connected!");
 });
+
+module.exports = { client };
