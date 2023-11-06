@@ -9,8 +9,8 @@ router.post("/sign-up", ctrl.register); // register  validateBody(schemas.regist
 
 router.post("/sign-in", ctrl.login); // validateBody(schemas.loginSchema),
 
-router.get("/me", authenticate, ctrl.getCurrent);
+// router.get("/me", authenticate, ctrl.getCurrent);
 
-router.post("/logout", authenticate, ctrl.logout);
+// router.post("/logout", authenticate, ctrl.logout);
 
 module.exports = router;

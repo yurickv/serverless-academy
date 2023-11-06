@@ -1,12 +1,12 @@
 const express = require("express");
-
+require("dotenv").config();
 const cors = require("cors");
 // require("dotenv").config();
 
-// const contactsRouter = require("./routes/api/contacts");
+// const userRouter = require("./routes/user");
 const app = express();
 
-// const authRouter = require("./routes/auth");
+const authRouter = require("./routes/auth");
 
 // const formatsLogger = app.get("env") === "development" ? "dev" : "short";
 
@@ -14,11 +14,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// app.use("/auth", authRouter);
-// app.use("/api/contacts", contactsRouter);
+app.use("/auth", authRouter);
+// app.use("/me", userRouter);
 
 app.use((req, res) => {
-  res.status(404).json({ message: "Not found" });
+  res.status(404).json({ message: "Not found 404" });
 });
 
 app.use((err, req, res, next) => {
