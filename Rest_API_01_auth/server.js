@@ -4,9 +4,9 @@ const app = require("./app");
 const client = new Client({
   ssl: { rejectUnauthorized: false },
   user: "postgres",
-  host: "localhost",
-  database: "users",
-  password: "0286",
+  host: "db.nqbnnolyjulonpbozyyp.supabase.co",
+  database: "postgres",
+  password: "jJfe$s-87)EWRZr",
   port: 5432,
 });
 client.connect(function (err) {

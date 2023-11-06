@@ -6,7 +6,7 @@ const cors = require("cors");
 // const contactsRouter = require("./routes/api/contacts");
 const app = express();
 
-const authRouter = require("./routes/auth");
+// const authRouter = require("./routes/auth");
 
 // const formatsLogger = app.get("env") === "development" ? "dev" : "short";
 
@@ -14,7 +14,7 @@ const authRouter = require("./routes/auth");
 app.use(cors());
 app.use(express.json());
 
-app.use("/auth", authRouter);
+// app.use("/auth", authRouter);
 // app.use("/api/contacts", contactsRouter);
 
 app.use((req, res) => {
