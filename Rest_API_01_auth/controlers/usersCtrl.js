@@ -1,122 +1,126 @@
-const { ctrlWrapper } = require("../helpers/ctrlWrapper");
-const { Client } = require("pg");
+const { ctrlWrapper, requestDB } = require("../helpers");
+
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { SECRET_KEY, DB_PASSWORD } = process.env;
-
-const client = new Client({
-  ssl: { rejectUnauthorized: false },
-  user: "postgres",
-  host: "db.nqbnnolyjulonpbozyyp.supabase.co",
-  database: "postgres",
-  password: DB_PASSWORD,
-  port: 5432,
-});
-client.connect(function (err) {
-  if (err) throw err;
-
-  console.log("Connected!");
-});
+const { SECRET_KEY } = process.env;
 
 const register = async (req, res) => {
   const { email, password } = req.body;
-  // Перевірте, чи всі поля заповнені
-  if (!email || !password) {
-    res.status(400).send({
-      error: "Всі поля повинні бути заповнені",
-    });
-    return;
-  }
-  // Перевірте, чи існує користувач з таким email
-  const exists = await client.query(`SELECT * FROM users WHERE email = $1`, [
-    email,
-  ]);
-  // Якщо користувач існує, відхиліть реєстрацію, функція відправить відповідь з кодом 409.
-  if (exists.rows.length > 0) {
-    res
-      .status(409)
-      .send({ success: false, error: "Користувач з таким email вже існує" });
-    return;
-  }
+
   const payload = {
     email: email,
   };
   const hashPassword = await bcrypt.hash(password, 10);
-  const accessToken = jwt.sign(payload, SECRET_KEY, { expiresIn: "1h" });
-  const refreshToken = jwt.sign(payload, SECRET_KEY);
+  const newAccessToken = jwt.sign(payload, SECRET_KEY, { expiresIn: "1h" });
+  const newRefreshToken = jwt.sign(payload, SECRET_KEY);
   const query = `INSERT INTO users (accesstoken, refreshtoken, email, password) VALUES ($1, $2, $3, $4)`;
   const values = [accessToken, refreshToken, email, hashPassword];
-  // Вставте дані в базу даних
-
+  // Запис юзера в базу даних
+  const client = await requestDB();
   await client.query(query, values);
-  const write = await client.query(`SELECT * FROM users WHERE email = $1`, [
+  const newUser = await client.query(`SELECT * FROM users WHERE email = $1`, [
     email,
   ]);
-  // console.log(write.rows[0].id);
-  // Відправте успішну відповідь
+  client.end(console.log("Disconnected from DB!"));
+
   res.status(201).send({
     message: "Користувач успішно зареєстрований",
     success: true,
     data: {
-      id: write.rows[0].id,
-      accessToken: accessToken,
-      refreshToken: refreshToken,
+      id: newUser.rows[0].id,
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
     },
   });
 };
 
 const login = async (req, res) => {
-  const { email, password } = req.body;
-  // Перевірте, чи всі поля заповнені
-  if (!email || !password) {
-    res.status(400).send({
-      error: "Всі поля повинні бути заповнені",
-    });
-    return;
-  }
-  // Перевірте, чи існує користувач з таким email
+  const { email } = req.body;
+
+  const client = await requestDB();
   const exists = await client.query(`SELECT * FROM users WHERE email = $1`, [
     email,
   ]);
-  // Якщо користувач не існує, відхиліть авторизацію, функція відправить відповідь з кодом 404.
-  if (!exists.rows.length > 0) {
-    res
-      .status(404)
-      .send({ success: false, error: "Користувача з таким email не існує" });
-    return;
-  }
-  const { id, refreshtoken } = exists.rows[0];
-  // перевірка пароля
-  const passwordCompare = await bcrypt.compare(
-    password,
-    exists.rows[0].password
-  );
-  if (!passwordCompare) {
-    res.status(404).send({ success: false, error: "Password is wrong" });
-    return;
-  }
 
   const payload = {
     email: email,
   };
-  const accessToken = jwt.sign(payload, SECRET_KEY, { expiresIn: "1h" });
+  const newAccessToken = jwt.sign(payload, SECRET_KEY, { expiresIn: "1h" });
+  const newRefreshToken = jwt.sign(payload, SECRET_KEY);
+  // Вставка нових токенів в базу даних
 
-  // Вставте новий accessToken в базу даних
   const query = `UPDATE users
-SET accesstoken = ${accessToken}
-WHERE id = ${id};`;
-  await client.query(query);
+ SET accesstoken = $1,
+    refreshtoken = $2
+WHERE email = $3;`;
+  await client.query(query, [newAccessToken, newRefreshToken, email]);
 
-  // Відправте успішну відповідь
+  client.end(console.log("Disconnected from DB!"));
+
   res.status(200).send({
     message: "Користувач успішно залогінився",
     success: true,
     data: {
-      id: id,
-      accessToken: accessToken,
-      refreshToken: refreshtoken,
+      id: exists.rows[0].id,
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
     },
   });
 };
 
-module.exports = { register: ctrlWrapper(register), login: ctrlWrapper(login) };
+const logout = async (req, res) => {
+  const { email } = req.body;
+
+  const newAccessToken = "";
+  const newRefreshToken = "";
+  // Стирання токенів з бази даних
+  const client = await requestDB();
+  const exists = await client.query(`SELECT * FROM users WHERE email = $1`, [
+    email,
+  ]);
+  const query = `UPDATE users
+ SET accesstoken = $1,
+    refreshtoken = $2
+WHERE email = $3;`;
+  await client.query(query, [newAccessToken, newRefreshToken, email]);
+
+  client.end(console.log("Disconnected from DB!"));
+
+  res.status(200).send({
+    message: "Користувач успішно розлогінився",
+    success: true,
+    data: {
+      id: exists.rows[0].id,
+      email: email,
+    },
+  });
+};
+
+const getCurrentUser = async (req, res) => {
+  const { authorization } = req.headers;
+  const [bearer, token] = authorization.split(" ");
+
+  const { email } = jwt.verify(token, SECRET_KEY);
+
+  const client = await requestDB();
+  const exists = await client.query(`SELECT * FROM users WHERE email = $1`, [
+    email,
+  ]);
+  client.end(console.log("Disconnected from DB!"));
+
+  res.status(200).send({
+    message: "Користувач прийшов",
+    success: true,
+    data: {
+      id: exists.rows[0].id,
+      email: exists.rows[0].email,
+    },
+  });
+};
+
+module.exports = {
+  register: ctrlWrapper(register),
+  login: ctrlWrapper(login),
+  logout: ctrlWrapper(logout),
+  getCurrentUser: ctrlWrapper(getCurrentUser),
+};
