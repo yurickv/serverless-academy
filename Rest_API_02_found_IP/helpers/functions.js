@@ -6,7 +6,11 @@ function findCountryByIP(ipAddress, ipRanges) {
     const to = Number(ipRange.to);
 
     if (numericIP >= from && numericIP <= to) {
-      return { country: ipRange.country, countryName: ipRange.countryFullName };
+      return {
+        IP: ipAddress,
+        country: ipRange.country,
+        countryName: ipRange.countryFullName,
+      };
     }
   }
 
